@@ -40,11 +40,11 @@ export function AppRouter() {
             path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.settings)}
             element={<SettingsPage />}
           />
+          <Route
+            path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.itemDetail)}
+            element={<ItemDetailPage />}
+          />
         </Route>
-        <Route
-          path={toRelativeUnder(APP_BASE, APP_ROUTE_PATHS.itemDetail)}
-          element={<ItemDetailPage />}
-        />
         <Route path="*" element={<AppNotFoundPage />} />
       </Route>
       <Route path="*" element={<PublicNotFoundPage />} />

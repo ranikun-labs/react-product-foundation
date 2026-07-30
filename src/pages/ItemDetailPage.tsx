@@ -9,7 +9,7 @@ export function ItemDetailPage() {
   const { locale, t } = useTranslation();
   const steps = getMessages(locale).items.detail.steps;
   return (
-    <main data-scroll-surface className="h-full overflow-y-auto p-6 pt-10">
+    <main className="min-h-full p-6 pt-10">
       <h1 className="text-3xl font-bold">{t('items.detail.title')}</h1>
       <dl className="mt-8 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
         <dt className="font-medium">{t('items.detail.identifier')}</dt>
