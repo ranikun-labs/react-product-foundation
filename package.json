@@ -11,13 +11,18 @@
   "scripts": {
     "dev": "vite",
     "build:client": "tsc -b && vite build",
+    "build:ssr": "vite build --ssr src/entry-server.tsx --outDir dist-ssr",
+    "prerender": "node scripts/prerender.mjs",
+    "verify:prerender": "node scripts/verify-prerender-output.mjs",
+    "build": "pnpm build:client && pnpm build:ssr && pnpm prerender && pnpm verify:prerender",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "cap:sync": "pnpm build && cap sync"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.2",
