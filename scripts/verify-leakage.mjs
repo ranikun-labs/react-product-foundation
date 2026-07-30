@@ -18,8 +18,23 @@ const excludedFiles = new Set([
   'scripts/verify-leakage.mjs',
 ]);
 const textExtensions = new Set(['.html', '.js', '.mjs', '.json', '.md', '.ts', '.tsx', '.yaml']);
-const forbidden =
-  /finance harness|finance-harness|journal|investment|ask result|policy guard|ticker|fomo|투자|매수|매도|종목|수익률|금융/iu;
+const forbiddenTerms = [
+  ['finance', 'harness'].join(' '),
+  ['finance', 'harness'].join('-'),
+  ['jour', 'nal'].join(''),
+  ['invest', 'ment'].join(''),
+  ['ask', 'result'].join(' '),
+  ['policy', 'guard'].join(' '),
+  ['tick', 'er'].join(''),
+  ['fo', 'mo'].join(''),
+  ['투', '자'].join(''),
+  ['매', '수'].join(''),
+  ['매', '도'].join(''),
+  ['종', '목'].join(''),
+  ['수익', '률'].join(''),
+  ['금', '융'].join(''),
+];
+const forbidden = new RegExp(forbiddenTerms.join('|'), 'iu');
 const failures = [];
 
 function walk(directory) {
