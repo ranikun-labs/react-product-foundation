@@ -33,6 +33,11 @@ const forbiddenTerms = [
   ['종', '목'].join(''),
   ['수익', '률'].join(''),
   ['금', '융'].join(''),
+  ['일', '지'].join(''),
+  ['복', '기'].join(''),
+  ['공부', '노트'].join(' '),
+  ['목표', '가'].join(''),
+  ['손절', '가'].join(''),
 ];
 const forbidden = new RegExp(forbiddenTerms.join('|'), 'iu');
 const failures = [];

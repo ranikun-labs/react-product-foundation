@@ -38,4 +38,13 @@ describe('application router', () => {
     expect(screen.getByText('folder/item 1')).toBeVisible();
     expect(screen.getByRole('link', { name: '항목' })).toHaveAttribute('aria-current', 'page');
   });
+
+  it('renders an encoded unicode item id without double decoding', () => {
+    render(
+      <MemoryRouter initialEntries={[`/app/items/${encodeURIComponent('한글 항목')}`]}>
+        <AppRouter />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('한글 항목')).toBeVisible();
+  });
 });

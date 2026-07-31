@@ -23,6 +23,13 @@ describe('route contract', () => {
     expect(buildAppItemDetailPath('folder/item 1')).toBe('/app/items/folder%2Fitem%201');
   });
 
+  it('encodes a unicode item identifier exactly once', () => {
+    expect(buildAppItemDetailPath('한글 항목')).toBe(
+      `/app/items/${encodeURIComponent('한글 항목')}`,
+    );
+    expect(buildAppItemDetailPath('한글 항목')).not.toMatch(/%25/);
+  });
+
   it('accepts only supported locales', () => {
     expect(isSupportedLocale('ko')).toBe(true);
     expect(isSupportedLocale('en')).toBe(true);
