@@ -95,6 +95,19 @@ remain SPA routes and use the unmarked `dist/index.html` shell as the host fallb
 `src/prerender/manifest.ts` and `scripts/verify-prerender-output.mjs` together when public paths
 change.
 
+### SPA Host Rewrite
+
+The app uses `BrowserRouter`, so direct navigation and page refreshes under `/app/*` need the host
+to fall back to `index.html`:
+
+- The four public routes (`/ko`, `/en`, `/ko/features`, `/en/features`) are pre-rendered and can be
+  served as static files directly.
+- `/app/*` routes are client-rendered only. Any unknown path under `/app` must be rewritten to
+  `index.html` by the static host or CDN, or direct links and refreshes will 404.
+- Host-specific rewrite config (for example a `_redirects` or `vercel.json` file) is intentionally
+  not included, to keep the template platform-neutral. Add the rewrite rule for your chosen host
+  before shipping.
+
 ### Compliance notice
 
 `src/components/ComplianceNotice.tsx` is an independent, informational example with no title,
