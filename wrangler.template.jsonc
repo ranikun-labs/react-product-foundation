@@ -1,0 +1,14 @@
+// Cloudflare Workers(정적 자산) 배포 템플릿. 선택 구성이며 기본으로 사용되지 않는다.
+// 사용 방법과 주의: docs/deploy/cloudflare.md
+// 사용하려면 이 파일을 `wrangler.jsonc`로 복사하고 name을 바꾼다.
+// 이 파일명은 wrangler가 자동 인식하지 않으므로 복사 전에는 배포에 영향이 없다.
+// account_id, secret, 토큰은 이 파일에 쓰지 않는다(환경 변수/CI secret으로 주입).
+{
+  "name": "REPLACE-WITH-PRODUCT-NAME",
+  "compatibility_date": "2026-11-19",
+  "assets": {
+    "directory": "./dist",
+    // 클라이언트 라우팅(/app/*)을 위해 없는 경로는 index.html로 보낸다.
+    "not_found_handling": "single-page-application",
+  },
+}
