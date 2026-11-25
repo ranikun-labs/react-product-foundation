@@ -13,7 +13,7 @@
 | `compatibility_date`        | `2026-11-19`              | 두 제품 동일                        |
 | `name`                      | 제품별 `*-dev`            | 제품마다 다름. 템플릿은 placeholder |
 
-제품별로만 있는 설정(템플릿에 넣지 않음): Carelog의 `workers_dev: false`, `preview_urls: true`, 빈 `previews`.
+제품별로만 있는 설정(템플릿에 넣지 않음): Carelog의 `workers_dev: false`, `preview_urls: true` 두 개. 빈 `"previews": {}`는 두 제품 모두에 있다(템플릿에는 넣지 않았다).
 필요하면 제품이 직접 추가한다. 그 값이 필요한 이유는 제품이 판단한다.
 
 ## 2. 사용 방법

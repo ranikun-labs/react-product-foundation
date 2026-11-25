@@ -8,7 +8,8 @@
   "compatibility_date": "2026-11-19",
   "assets": {
     "directory": "./dist",
-    // 클라이언트 라우팅(/app/*)을 위해 없는 경로는 index.html로 보낸다.
+    // 없는 경로는 index.html로 보낸다(SPA fallback). 대상이 /app/*만은 아니며,
+    // prerender된 /:locale 정적 HTML과의 우선순위는 미검증이다(docs/deploy/cloudflare.md 4장).
     "not_found_handling": "single-page-application",
   },
 }
