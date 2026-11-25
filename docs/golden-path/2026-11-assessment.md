@@ -61,7 +61,7 @@
 | 1 | 공통 UI 컴포넌트(8종 verbatim + button/badge) | **RPF가 아니라 패키지**(`@ranikun-labs/react-ui` 후보) | 복사본 sha256 lock과 drift 테스트가 이미 "패키지가 생기면 삭제"를 전제로 존재 | 패키지 미게시. 게시 전에는 RPF에 8종을 복사하지 않는다 |
 | 2 | Theme 런타임(system/light/dark, 저장, DOM 반영) | 패키지(저장 키 주입 형태) + RPF `index.html` 스니펫 | 두 제품 모두 구현·테스트 보유, 값(`THEME_COLOR`)까지 동일 | 4장의 설계 차이를 해소해야 함 |
 | 3 | `wrangler.jsonc` 템플릿 + 최소 PR 검증 워크플로 | RPF | 두 제품이 같은 형태. 신규 제품마다 재작성 중 | 실제 배포 경로 확인 후 이름 placeholder화 |
-| 4 | 시맨틱 토큰 이름 체계(`--page`·`--brand-deep` 등) | 패키지(CSS 토큰) | 두 `globals.css`가 같은 이름에 다른 값을 둔다(브랜드·밀도만 제품 값) | design-system 저장소가 비어 있어(로컬 확인 시 커밋 0) 토큰 정본이 아직 없음 |
+| 4 | 시맨틱 토큰 이름 체계(`--page`·`--brand-deep` 등) | 패키지(CSS 토큰) | 두 `globals.css`가 같은 이름에 다른 값을 둔다(브랜드·밀도만 제품 값) | 토큰 정본은 `ranikun-labs/design-system@021e40e61ab19a487133d903fae7412eb2a135cb`에 존재한다. 이 분석 세션은 접근하지 못해 내용 대조는 NOT_VERIFIED |
 | 5 | AI 계약(경로 단일 원본·도메인 로직 금지·verify 절차) | RPF `AGENTS.md` | Finance `CLAUDE.md`가 같은 규칙을 이미 문서화. 정책은 oh-my-ai, 레포 규칙은 RPF | 증거가 Finance 1곳뿐이라 "제품에서 검증" 요건은 약함. 문서만 승격 |
 
 승격하지 않는 것: 인증(Finance/Carelog 패턴 상이), Adaptive 규칙(상이), API 클라이언트(공통 구현 없음), E2E harness(제품 시나리오), `verify-build-idempotency`(Finance 1곳뿐).
@@ -116,7 +116,7 @@ Brand·Density는 이 모듈에 넣지 않는다. 두 제품의 차이가 토큰
 
 ### 6.1 공통 UI 패키지 게시 후 RPF가 소비하도록 바꾸는 최소 변경
 
-전제: `@ranikun-labs/react-ui`가 게시되고 `button`·`badge`·`card` 및 필요한 토큰 CSS를 export한다. 현재 RPF 쪽 사용처는 6개 파일, import는 `button` 4곳과 `card` 2곳이라 영향은 작다.
+전제: 패키지명 후보 `@ranikun-labs/react-ui`가 게시되고 필요한 토큰 CSS를 export한다. 현재 RPF 쪽 사용처는 6개 파일, import는 `button` 4곳과 `card` 2곳이라 영향은 작다.
 
 1. `package.json`: 패키지를 정확한 버전으로 추가하고 `class-variance-authority`·`clsx`·`tailwind-merge`·`tw-animate-css`는 패키지 peer/내장 여부에 맞춰 정리한다.
 2. `src/components/ui/{button,badge,card}.tsx`(146줄) 삭제 후 import 6곳을 패키지로 교체한다. 한 PR에서 임시 re-export를 두면 롤백이 쉽다.
@@ -125,6 +125,13 @@ Brand·Density는 이 모듈에 넣지 않는다. 두 제품의 차이가 토큰
 5. `scripts/verify-leakage.mjs`·`docs/provenance.md`: 패키지 출처 기록과 금지어 검사 범위 반영.
 6. 패키지 레지스트리 인증(`.npmrc`)과 CI 설치 토큰. 개인 토큰이 템플릿에 남지 않게 한다.
 7. 소비 후 `pnpm verify:full`을 실행하고 시각 회귀를 최소 1화면 확인한다.
+
+소비 범위를 두 단계로 구분한다.
+
+| 구분 | 내용 | 상태 |
+| --- | --- | --- |
+| S1 부분 소비(실증) | `Card`·`cn` 중심으로 패키지를 소비해 설치·스타일 스캔·빌드가 되는지 확인 | 실증 범위. 이것만으로 소비 완료가 아니다 |
+| 전체 소비 완료 조건 | `Button`·`Badge`·`Card` 등 RPF `ui/` 전부를 패키지로 교체, 로컬 복사본 삭제, 토큰 CSS 소비, `pnpm verify:full` 통과, 시각 확인 | 미충족 |
 
 ### 6.2 권장 순서
 
@@ -140,6 +147,21 @@ Brand·Density는 이 모듈에 넣지 않는다. 두 제품의 차이가 토큰
 - RPF `main`에 Finance·Carelog `dev`를 통째로 병합해 "최신화"하지 않는다. 제품 도메인이 섞인다.
 - 이 문서를 근거로 `v1.0.0` 등 표준 태그를 먼저 붙이지 않는다. Owner 결정 후에 한다.
 
+## 6.4 후속 평가 대상과 최소 측정 기준
+
+온보딩 외에 기능 개발·유지보수·최적화·디자인·AI 실행·개발 품질도 효과를 봐야 한다. 새 운영 업무를 만들지 않고 기존 CI 결과와 실행 보고(PR 본문 검증표)만 쓴다.
+
+| 영역 | 측정 대상 | 수집 방법 |
+| --- | --- | --- |
+| 기능 개발 | 첫 화면~첫 PR까지 걸린 시간 | PR 생성 시각과 저장소 생성/브랜치 시각 |
+| 유지보수 | 패키지 업데이트가 제품에 반영되는 데 걸린 시간, 복사본 drift 건수 | 제품 PR 이력, drift 테스트 실패 |
+| 최적화 | 번들 크기, 빌드 시간 | CI build 로그 |
+| 디자인 | 토큰·컴포넌트 일탈 수정 건수 | PR 리뷰 지적, 토큰 대조 테스트 |
+| AI 실행 | 실행 중단·복구 건수, NOT_RUN 비율 | 실행 보고, PR 검증표 |
+| 개발 품질 | CI 통과율, 재작업 커밋 수 | CI 이력, PR 커밋 수 |
+
+신규 제품 1~2개에서 수동 기록으로 시작하고, 자동 수집은 필요가 확인된 뒤에 한다.
+
 ## 7. 과설계로 판단한 것 (현재 규모, 제품 2개)
 
 - 런타임 Brand·Density 전환 시스템
@@ -152,7 +174,8 @@ Brand·Density는 이 모듈에 넣지 않는다. 두 제품의 차이가 토큰
 
 - 실행 검증 없음: `pnpm verify`, 빌드, E2E 모두 NOT_RUN. 모든 판단은 정적 비교 결과다.
 - Cloudflare 실제 배포 트리거와 환경별(DEV/PROD) 설정은 저장소 파일만으로 확인되지 않았다.
-- `design-system` 로컬 저장소는 커밋이 없어 토큰·컴포넌트 정본의 실제 상태를 확인하지 못했다.
+- `ranikun-labs/design-system@021e40e`에 토큰 정본이 존재한다(Owner 확인). 이 분석 세션은 로컬 clone이 비어 있어 접근하지 못했고, 정본과 두 제품 `globals.css`의 대조는 NOT_VERIFIED다. 정본이 없다는 뜻이 아니다.
+- Finance·Carelog는 같은 계보(Carelog가 Finance UI를 복사)라 "독립 두 제품 검증" 근거로는 제한적이다.
 - `eslint.config.js` 차이 14줄의 의도는 읽지 않았다.
 - Capacitor 네이티브 프로젝트 실기기 검증 여부는 확인하지 않았다.
 - 공수 수치는 모두 추정이다.
