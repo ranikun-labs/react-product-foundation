@@ -29,7 +29,7 @@
 | Routing(공개·앱) | ① | `/:locale` 공개 + `/app/*` + `routes.ts` 단일 원본이 세 곳 동일 | `src/constants/routes.ts`, `src/app/AppRouter.tsx` |
 | Routing(인증·보호) | ③ + ④ | RPF에 인증 라우트·보호 가드가 없다. Finance는 `/auth` 단일 진입 + 라우트별 `AuthRequiredSurface`, Carelog는 `/auth/{entry,login,signup}` + `Navigate` 가드로 **패턴이 다르다** | Finance `src/constants/routes.ts`·`src/features/auth/`, Carelog `src/constants/routes.ts`·`src/app/AppRouter.tsx` |
 | Authentication | ④ (+⑤) | Finance는 reference auth 플래그, Carelog는 `AuthProvider`+상태기계+port+in-memory adapter. 공유할 공통 구현 없음. 상태기계 승격은 과설계 | Finance `src/features/auth/financeReferenceAuth.ts`, Carelog `src/auth/authStateMachine.ts`·`AuthProvider.tsx` |
-| API Client·오류 처리 | ③ (공통 클라이언트는 ⑤) | 공통 HTTP 클라이언트는 어느 쪽에도 없다. `fetch(`는 Finance 로컬 분석 1곳, Carelog는 `src/integrations/carelog/` port. 규칙(오류 모양·https 강제)만 문서화 가치 있음 | Finance `src/features/general-analysis/LocalGeneralAnalysis.tsx`, Carelog `src/integrations/carelog/authPort.ts` |
+| API Client·오류 처리 | ③ (공통 클라이언트는 ⑤) | 제품 간 공유 HTTP 클라이언트는 없다. Carelog는 자체 `createCarelogHttpClient`(401 재시도, session provider, envelope 처리)를 보유하고, Finance는 `fetch(` 직접 호출이 로컬 분석 1곳뿐이다. Carelog 구현이 Carelog API 계약에 묶여 있고 Finance에는 대응 사례가 없어 승격 불가(⑤). 오류 모양·https 강제 규칙만 문서화(③) | Finance `src/features/general-analysis/LocalGeneralAnalysis.tsx`, Carelog `src/integrations/carelog/httpClient.ts`·`authPort.ts` |
 | 상태 관리 | ① (라이브러리 추가는 ⑤) | 세 곳 모두 상태 라이브러리 없음(Context/로컬 상태). 현 규모에서 도입 불필요 | 각 `package.json` dependencies, Carelog `src/components/layout/ProductionStateProviders.tsx` |
 | 환경 설정(DEV/PROD) | ③ | RPF는 `vite-env.d.ts`뿐. Finance는 `VITE_FINANCE_*` 기능 플래그, Carelog는 `VITE_CARELOG_API_BASE_URL`+`PROD`일 때 https 강제+`test` 모드로 서로 다르다. 공통은 "타입 선언된 `VITE_` 변수 + PROD 가드" 규약뿐 | Finance `src/vite-env.d.ts`, Carelog `src/integrations/carelog/authPort.ts`, RPF `src/vite-env.d.ts` |
 | UI / Design System 연결 | ② | RPF는 shadcn 원형 3개(button/badge/card, 146줄). Finance는 ui 13종, Carelog는 10종을 **복사**하고 sha256 lock+drift 테스트로 지킨다("공유 패키지가 생기면 삭제" 명시). 복사 모델의 한계가 이미 드러남 | RPF `src/components/ui/`, Carelog `design-foundation.lock.json`·`src/components/ui/design-foundation-drift.test.ts` |
@@ -60,11 +60,11 @@
 | --- | --- | --- | --- | --- |
 | 1 | 공통 UI 컴포넌트(8종 verbatim + button/badge) | **RPF가 아니라 패키지**(`@ranikun-labs/react-ui` 후보) | 복사본 sha256 lock과 drift 테스트가 이미 "패키지가 생기면 삭제"를 전제로 존재 | 패키지 미게시. 게시 전에는 RPF에 8종을 복사하지 않는다 |
 | 2 | Theme 런타임(system/light/dark, 저장, DOM 반영) | 패키지(저장 키 주입 형태) + RPF `index.html` 스니펫 | 두 제품 모두 구현·테스트 보유, 값(`THEME_COLOR`)까지 동일 | 4장의 설계 차이를 해소해야 함 |
-| 3 | `wrangler.jsonc` 템플릿 + 최소 PR 검증 워크플로 | RPF | 두 제품이 같은 형태. 신규 제품마다 재작성 중 | 실제 배포 경로 확인 후 이름 placeholder화 |
+| 3 | `wrangler.jsonc` 템플릿 + 최소 PR 검증 워크플로 | RPF | 두 제품이 같은 형태(두 제품 각각 작성한 흔적) | 실제 배포 경로 확인 후 이름 placeholder화 |
 | 4 | 시맨틱 토큰 이름 체계(`--page`·`--brand-deep` 등) | 패키지(CSS 토큰) | 두 `globals.css`가 같은 이름에 다른 값을 둔다(브랜드·밀도만 제품 값) | 토큰 정본은 `ranikun-labs/design-system@021e40e61ab19a487133d903fae7412eb2a135cb`에 존재한다. 이 분석 세션은 접근하지 못해 내용 대조는 NOT_VERIFIED |
 | 5 | AI 계약(경로 단일 원본·도메인 로직 금지·verify 절차) | RPF `AGENTS.md` | Finance `CLAUDE.md`가 같은 규칙을 이미 문서화. 정책은 oh-my-ai, 레포 규칙은 RPF | 증거가 Finance 1곳뿐이라 "제품에서 검증" 요건은 약함. 문서만 승격 |
 
-승격하지 않는 것: 인증(Finance/Carelog 패턴 상이), Adaptive 규칙(상이), API 클라이언트(공통 구현 없음), E2E harness(제품 시나리오), `verify-build-idempotency`(Finance 1곳뿐).
+승격하지 않는 것: 인증(Finance/Carelog 패턴 상이), Adaptive 규칙(상이), API 클라이언트(Carelog 자체 구현만 있고 Finance에 같은 패턴 없음), E2E harness(제품 시나리오), `verify-build-idempotency`(Finance 1곳뿐).
 
 ## 4. Theme 모듈 비교와 승격 방안
 
@@ -106,9 +106,9 @@ Brand·Density는 이 모듈에 넣지 않는다. 두 제품의 차이가 토큰
 | UI 컴포넌트 10종 확보 + drift 가드 | 1~2일 | 0.25일 | Carelog `design-foundation.lock.json` 10건, 수동 복사·패치·hash 관리 |
 | Light/Dark 테마 + 깜빡임 방지 + 테스트 | 0.5~1일 | 0.1일 | 두 제품 구현 합계 약 320줄+테스트 약 460줄 |
 | CI 워크플로 + `wrangler.jsonc` | 0.5일 | 0.1~0.2일 | 두 제품이 각각 재작성 |
-| AI 계약 문서 정리 | 0.5일 | 0.1일 | Finance 42줄, Carelog 12줄, RPF 11줄로 편차 |
+| AI 계약 문서 정리 | 0.5일 | 0.1일 | Finance `AGENTS.md` 42줄, Carelog `AGENTS.md` 12줄, RPF `AGENTS.md` 11줄로 편차 |
 | 환경 변수 타입·PROD 가드 | 0.25일 | 변화 없음 | 현재 제품마다 달라 승격 안 함(③ 문서화만) |
-| 합계 | 약 3~4.5일 | 약 0.5~1일 | 위 항목의 합 |
+| 합계 | 약 2.75~4.25일 | 약 0.8~0.9일 | 위 항목의 합(환경 변수 행 0.25일은 양쪽 포함) |
 
 줄어들지 않는 것: 도메인 화면, 인증 연동, API 연동, 제품별 E2E, 제품별 Adaptive 규칙. 신규 제품의 본 작업은 거의 그대로다.
 
@@ -165,7 +165,7 @@ Brand·Density는 이 모듈에 넣지 않는다. 두 제품의 차이가 토큰
 ## 7. 과설계로 판단한 것 (현재 규모, 제품 2개)
 
 - 런타임 Brand·Density 전환 시스템
-- 공통 API 클라이언트·상태관리 라이브러리 기본 탑재
+- 공통 API 클라이언트(Carelog 구현의 템플릿 승격 포함)·상태관리 라이브러리 기본 탑재
 - Finance·Carelog 인증 상태기계의 템플릿 승격
 - 템플릿 자동 동기화 봇·생성 CLI(패키지 소비로 대체 가능)
 - `index.html` 테마 스크립트의 패키지·플러그인화
